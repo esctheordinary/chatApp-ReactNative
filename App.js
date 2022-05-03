@@ -8,6 +8,7 @@ import SignIn from "./screens/SignIn";
 import SignUp from "./screens/SignUp";
 import ChatScreen from "./screens/ChatScreen";
 import SplashScreen from "./screens/SplashScreen";
+import { UsersList } from "./screens/UsersScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,7 +35,7 @@ export default function App() {
           name="SignIn"
           component={SignIn}
           options={{
-            title: "Sign In", 
+            title: "Sign In",
             animationTypeForReplace: isAuth ? "pop" : "push",
             headerShown: false,
           }}
@@ -52,17 +53,28 @@ export default function App() {
     );
   };
 
-  const HomeStack = () => {
+  const TabNavigator = () => {
     return (
       <Tab.Navigator
         screenOptions={{
           tabBarIcon: ({ focused, color, size }) => {
-            return <Ionicons name="chatbubbles-sharp" size={24} color={color} />;
+            return (
+              <Ionicons name="chatbubbles-sharp" size={24} color={color} />
+            );
           },
         }}
       >
-        <Tab.Screen name="Chats" component={ChatScreen} />
+        <Tab.Screen name="Users" component={UsersList} />
       </Tab.Navigator>
+    );
+  };
+
+  const HomeStack = () => {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={TabNavigator} />
+        <Stack.Screen name="ChatScreen" component={ChatScreen} />
+      </Stack.Navigator>
     );
   };
 
