@@ -1,18 +1,57 @@
-// import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
   View,
-  Image,
+  ToastAndroid,
   TextInput,
-  Button,
   TouchableOpacity,
 } from "react-native";
+import { firebase } from "../config/firebase";
 
 const SignIn = ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [user, setUser] = useState({ name: "", email: "", password: "" });
+
+  const handleChange = (value, name) => {
+    setUser((prevState) => ({ ...prevState, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    if (user.name === "" || user.email === "" || user.password === "") {
+      ToastAndroid.show("Please input all fields", ToastAndroid.SHORT);
+    } else {
+      firebase
+        .auth()
+        .createUserWithEmailAndPassword(user.email, user.password)
+        .then((response) => {
+          console.log('.then => response', response)
+          const uid = response.user.uid;
+          const data = {
+            id: uid,
+            email: user.email,
+            name: user.name,
+          };
+          const usersRef = firebase.firestore().collection("users");
+          usersRef
+            .doc(uid)
+            .set(data)
+            .then((res) => {
+              console.log('.then => res', res)
+              navigation.navigate("SignIn");
+              ToastAndroid.show(
+                "Account successfully created, Please login",
+                ToastAndroid.SHORT
+              );
+            })
+            .catch((error) => {
+              alert(error);
+            });
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -22,16 +61,23 @@ const SignIn = ({ navigation }) => {
         <TextInput
           style={styles.TextInput}
           placeholder="Name"
+          value={user.name}
           placeholderTextColor="#003f5c"
+          onChangeText={(name) => {
+            handleChange(name, "name");
+          }}
         />
       </View>
 
       <View style={styles.inputView}>
         <TextInput
           style={styles.TextInput}
+          value={user.email}
           placeholder="Email"
           placeholderTextColor="#003f5c"
-          onChangeText={(email) => setEmail(email)}
+          onChangeText={(email) => {
+            handleChange(email, "email");
+          }}
         />
       </View>
 
@@ -40,13 +86,16 @@ const SignIn = ({ navigation }) => {
           style={styles.TextInput}
           placeholder="Password"
           placeholderTextColor="#003f5c"
+          value={user.password}
           secureTextEntry={true}
-          onChangeText={(password) => setPassword(password)}
+          onChangeText={(password) => {
+            handleChange(password, "password");
+          }}
         />
       </View>
 
-      <TouchableOpacity style={styles.signUpBtn}>
-        <Text style={styles.loginText}>LOGIN</Text>
+      <TouchableOpacity onPress={() => handleSubmit()} style={styles.signUpBtn}>
+        <Text style={styles.loginText}>Create Account</Text>
       </TouchableOpacity>
 
       <View style={styles.login_text}>
@@ -96,6 +145,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 40,
     backgroundColor: "#7FB5FF",
+  },
+
+  signUpBtnDisabled: {
+    width: "80%",
+    borderRadius: 10,
+    height: 45,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 40,
+    backgroundColor: "#C1BFB5",
   },
 
   logoText: {
